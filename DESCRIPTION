@@ -19,5 +19,5 @@ ByteCompile: true
 RoxygenNote: 7.3.1
 SystemRequirements: C++, gmp, fftw3
 NeedsCompilation: yes
-Packaged: 2024-09-26 06:31:02 UTC; heriche
+Packaged: 2024-09-26 17:17:52 UTC; heriche
 Author: Jean-Karim Heriche [cre, aut] (<https://orcid.org/0000-0001-6867-9425>)
