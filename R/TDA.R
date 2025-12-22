@@ -113,10 +113,9 @@ sliced_Wd <- function(Dg1, Dg2, M = 10, sigma = 1, dimensions = NULL, return.dis
     SW <- SW + K
   }
   if (!return.dist) {
-    return(exp(-SW/sigma))
-  } else {
-    return(SW)
+    SW <- exp(-SW/sigma)
   }
+  return(SW)
 }
 
 #' get_persistence_diagrams
@@ -227,12 +226,15 @@ get_kernel_matrix <- function(Diag = NULL, method = c("sWd", "pssk"), dimensions
   cluster <- parallel::makeCluster(ncpu, type = cluster.type)
   doParallel::registerDoParallel(cluster)
   if(method == "sWd") {
+    if(is.null(sigma) && !return.dist) {
+      stop("Kernel bandwidth sigma must be specified for method sWd")
+    }
     # Compute pairwise sliced Wasserstein distances
     K <- foreach::foreach(j = c(1:n), .combine='cbind') %:%
       foreach::foreach(i = c(1:n), .combine = 'c') %dopar% {
         Di <- Diag[[i]]
         Dj <- Diag[[j]]
-        sliced_Wd(Di, Dj, M, sigma, dimensions, return.dist)
+        sliced_Wd(Di, Dj, M = M, sigma = sigma, dimensions = dimensions, return.dist = return.dist)
       }
   } else if (method == "pssk") {
     K <- foreach::foreach(j = c(1:n), .combine='cbind') %:%

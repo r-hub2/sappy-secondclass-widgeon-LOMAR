@@ -1,8 +1,4 @@
-// for R
-#include <R.h>
-#include <R_ext/Print.h>
-
-// for Rcpp
+// for R, Rcpp
 #include <Rcpp.h>
 
 // for Rips

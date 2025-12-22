@@ -1,5 +1,12 @@
-# LOMAR 0.5.0
+# LOMAR 0.5.1
 
+## Changes
+  * Output coordinates of geometric median with alpha-shape features.
+  * Change computation of Hough transform in circle_hough_transform.
+  * Remove R header file.
+
+# LOMAR 0.5.0
+  
 ## Changes
   * Remove dependency on archived package aws
   * New functions around alpha-shapes and multiple registration

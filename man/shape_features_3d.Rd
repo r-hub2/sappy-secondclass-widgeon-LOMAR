@@ -26,4 +26,5 @@ Features are:
   - concavity: fraction of the convex hull volume not in the object
   - volume
   - area: area of the surface of the alpha-shape
+  - centre.x, centre.y and centre.z: coordinates of the geometric median of the points in the alpha-shape
 }

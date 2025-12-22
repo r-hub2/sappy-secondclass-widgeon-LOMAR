@@ -83,8 +83,10 @@ restore_coordinates <- function(X, mu, sigma) {
 #' @param weights a M x N matrix of point correspondence weights
 #' @param scale logical (default: FALSE), whether to use scaling
 #' @param maxIter maximum number of iterations to perform (default: 100)
-#' @param subsample if set, use this randomly selected fraction of the points
+#' @param subsample can be set either to a number in [0,1] representing the fraction of points to randomly 
+#' select or a list with vector elements X and Y containing indices of points to select in X and Y
 #' @param tol tolerance for determining convergence
+#' @param rotation.only logical (default: FALSE), if TRUE, don't perform translation
 #' @return a list of
 #' \itemize{
 #'    \item Y: transformed point set, 
@@ -113,15 +115,12 @@ restore_coordinates <- function(X, mu, sigma) {
 #' }
 #' @export
 
-cpd <- function(X, Y, w = 0, weights = NULL, scale = FALSE, maxIter = 100, subsample = NULL, tol = 1e-4) {
+cpd <- function(X, Y, w = 0, weights = NULL, scale = FALSE, maxIter = 100, subsample = NULL, tol = 1e-4, rotation.only = FALSE) {
   if (dim(Y)[2]!=dim(X)[2]) {
     stop("ERROR: Point sets must have same dimension")
   }
   if (w >= 1 || w < 0) {
     stop("ERROR: w must be in the interval [0,1)")
-  }
-  if (!is.null(subsample) && (subsample >= 1 || subsample<=0)) {
-    stop("ERROR: subsample must be a fraction between 0 and 1")
   }
   D <- dim(X)[2]
 
@@ -134,8 +133,15 @@ cpd <- function(X, Y, w = 0, weights = NULL, scale = FALSE, maxIter = 100, subsa
   
   Y0 <- NULL
   if(!is.null(subsample)) {
-    sample.X <- sample(nrow(X), floor(subsample * nrow(X)))
-    sample.Y <- sample(nrow(Y), floor(subsample * nrow(Y)))
+    if(length(subsample) == 1 && subsample < 1 && subsample > 0) {
+      sample.X <- sample(nrow(X), floor(subsample * nrow(X)))
+      sample.Y <- sample(nrow(Y), floor(subsample * nrow(Y)))
+    } else if(is.list(subsample) && length(subsample) == 2) {
+      sample.X <- subsample$X
+      sample.Y <- subsample$Y
+    } else {
+      stop("ERROR: subsample must be a fraction between 0 and 1 or a list with two vector elements X and Y")
+    }
     X <- X[sample.X,]
     Y0 <- Y
     Y <- Y[sample.Y,]
@@ -182,9 +188,11 @@ cpd <- function(X, Y, w = 0, weights = NULL, scale = FALSE, maxIter = 100, subsa
     R <- svd.A$u %*% C %*% t(svd.A$v)
     if(scale) {
       s <- sum(A*R)/tr(t(Yhat) %*% (diag(rowSums(P)) %*% Yhat))
-    }      
-    t <- muX - s * R %*% muY
-
+    }   
+    if(!rotation.only) {
+      t <- muX - s * R %*% muY
+    }
+    
     Yt <- apply_transformation(Y, R, t, s)
     
     sigma.old <- sigma
@@ -215,9 +223,11 @@ cpd <- function(X, Y, w = 0, weights = NULL, scale = FALSE, maxIter = 100, subsa
 #' @param Y point set to transform, a M x D matrix, 
 #' @param weights vector of length nrow(Y) containing weights for each point in Y. Not implemented.
 #' @param scale logical (default: FALSE), whether to use scaling.
-#' @param subsample if set, use this randomly selected fraction of the points
+#' @param subsample can be set either to a number in [0,1] representing the fraction of points to randomly 
+#' select or a list with vector elements X and Y containing indices of points to select in X and Y
 #' @param iterations number of iterations to perform (default: 100)
 #' @param tol tolerance for determining convergence
+#' @param rotation.only logical (default: FALSE), if TRUE, don't perform translation
 #' @return a list of
 #' \itemize{
 #'    \item Y: transformed point set, a M x D matrix,
@@ -244,12 +254,9 @@ cpd <- function(X, Y, w = 0, weights = NULL, scale = FALSE, maxIter = 100, subsa
 #' }
 #' @export
 
-icp <- function(X, Y, weights = NULL, iterations = 100, subsample = NULL, scale = FALSE, tol = 1e-3) {
+icp <- function(X, Y, weights = NULL, iterations = 100, subsample = NULL, scale = FALSE, tol = 1e-3, rotation.only = FALSE) {
   if (dim(Y)[2]!=dim(X)[2]) {
     stop("ERROR: Point sets must have same dimension")
-  }
-  if (!is.null(subsample) && (subsample >= 1 || subsample<=0)) {
-    stop("ERROR: subsample must be a fraction between 0 and 1")
   }
   D <- dim(X)[2]
   
@@ -262,8 +269,15 @@ icp <- function(X, Y, weights = NULL, iterations = 100, subsample = NULL, scale 
   
   Y0 <- NULL
   if(!is.null(subsample)) {
-    sample.X <- sample(nrow(X), floor(subsample * nrow(X)))
-    sample.Y <- sample(nrow(Y), floor(subsample * nrow(Y)))
+    if(length(subsample) == 1 && subsample < 1 && subsample > 0) {
+      sample.X <- sample(nrow(X), floor(subsample * nrow(X)))
+      sample.Y <- sample(nrow(Y), floor(subsample * nrow(Y)))
+    } else if(is.list(subsample) && length(subsample) == 2) {
+      sample.X <- subsample$X
+      sample.Y <- subsample$Y
+    } else {
+      stop("ERROR: subsample must be a fraction between 0 and 1 or a list with two vector elements X and Y")
+    }
     X <- X[sample.X,]
     Y0 <- Y
     Y <- Y[sample.Y,]
@@ -313,8 +327,10 @@ icp <- function(X, Y, weights = NULL, iterations = 100, subsample = NULL, scale 
     if(scale) {
       s <- sum(A*R)/sum(t(Yhat) %*% Yhat)
       s.final <- s.final * s
-    }  
-    t <- muX - s * R %*% muY
+    }
+    if(!rotation.only) {
+      t <- muX - s * R %*% muY
+    }
     
     Yt <- apply_transformation(Yt, R, t, s)
     R.final <- R %*% R.final
@@ -338,7 +354,8 @@ icp <- function(X, Y, weights = NULL, iterations = 100, subsample = NULL, scale 
 #' @param wx (optional) vector of mixture weights for X.
 #' @param wy (optional) vector of mixture weights for Y.
 #' @param maxIter maximum number of iterations to perform (default: 200)
-#' @param subsample if set, use this randomly selected fraction of the points
+#' @param subsample can be set either to a number in [0,1] representing the fraction of points to randomly 
+#' select or a list with vector elements X and Y containing indices of points to select in X and Y
 #' @param tol tolerance for determining convergence (default: 1e-8)
 #' @return a list of 
 #'  \itemize{
@@ -374,9 +391,6 @@ wgmmreg <- function(X, Y, CX, CY, wx = NULL, wy = NULL, maxIter = 200, subsample
   if (dim(Y)[2]!=dim(X)[2]) {
     stop("ERROR: Point sets must have same dimension")
   }
-  if (!is.null(subsample) && (subsample >= 1 || subsample<=0)) {
-    stop("ERROR: subsample must be a fraction between 0 and 1")
-  }
   D <- dim(X)[2]
   
   X <- as.matrix(X)
@@ -389,8 +403,15 @@ wgmmreg <- function(X, Y, CX, CY, wx = NULL, wy = NULL, maxIter = 200, subsample
   Y0 <- NULL
   if(!is.null(subsample)) {
     Y0 <- Y
-    sample.X <- sample(nrow(X), floor(subsample * nrow(X)))
-    sample.Y <- sample(nrow(Y), floor(subsample * nrow(Y)))
+    if(length(subsample) == 1 && subsample < 1 && subsample > 0) {
+      sample.X <- sample(nrow(X), floor(subsample * nrow(X)))
+      sample.Y <- sample(nrow(Y), floor(subsample * nrow(Y)))
+    } else if(is.list(subsample) && length(subsample) == 2) {
+      sample.X <- subsample$X
+      sample.Y <- subsample$Y
+    } else {
+      stop("ERROR: subsample must be a fraction between 0 and 1 or a list with two vector elements X and Y")
+    }
     X <- X[sample.X,]
     CX <- CX[,,sample.X]
     Y <- Y[sample.Y,]

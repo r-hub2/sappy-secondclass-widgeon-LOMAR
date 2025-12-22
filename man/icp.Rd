@@ -11,7 +11,8 @@ icp(
   iterations = 100,
   subsample = NULL,
   scale = FALSE,
-  tol = 0.001
+  tol = 0.001,
+  rotation.only = FALSE
 )
 }
 \arguments{
@@ -23,11 +24,14 @@ icp(
 
 \item{iterations}{number of iterations to perform (default: 100)}
 
-\item{subsample}{if set, use this randomly selected fraction of the points}
+\item{subsample}{can be set either to a number in [0,1] representing the fraction of points to randomly 
+select or a list with vector elements X and Y containing indices of points to select in X and Y}
 
 \item{scale}{logical (default: FALSE), whether to use scaling.}
 
 \item{tol}{tolerance for determining convergence}
+
+\item{rotation.only}{logical (default: FALSE), if TRUE, don't perform translation}
 }
 \value{
 a list of

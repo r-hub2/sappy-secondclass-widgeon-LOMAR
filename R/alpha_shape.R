@@ -71,6 +71,7 @@ get_surface_area <- function(as) {
 #'   - concavity: fraction of the convex hull volume not in the object
 #'   - volume
 #'   - area: area of the surface of the alpha-shape
+#'   - centre.x, centre.y and centre.z: coordinates of the geometric median of the points in the alpha-shape
 #'
 #' @param as an alpha-shape object of class ashape3d
 #' @return a named vector of numeric values or NULL if no non-singular vertices
@@ -107,7 +108,8 @@ shape_features_3d <- function(as) {
            least.axis = axis.lengths[3], elongation = elongation, 
            flatness = flatness, max.feret.diameter = max.feret.d, 
            max.inscribed.radius = insc.r, sphericity = sphericity, 
-           concavity = concavity, volume = volume, area = area))
+           concavity = concavity, volume = volume, area = area,
+           centre.x = centre[1], centre.y = centre[2], centre.z = centre[3]))
   }
 }
 

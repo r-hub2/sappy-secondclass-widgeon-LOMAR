@@ -40,7 +40,7 @@ test_that("Circle Hough transform works", {
   I <- points2img(points = as.data.frame(PS[[2]]), voxel.size = c(10, 10, 30), method = 'histogram')
   img <- apply(I, c(1,2), sum) # 2D projection along z
   df <- circle_hough_transform(img, rmin = 5, rmax = 5, threshold = 0.4)
-  expect_equal(df[, c("x", "y", "r")], data.frame(x = 16, y = 12, r = 5))
+  expect_equal(df[, c("x", "y", "r")], data.frame(x = 15, y = 12, r = 5))
 })
 
 test_that("coloc_index works", {

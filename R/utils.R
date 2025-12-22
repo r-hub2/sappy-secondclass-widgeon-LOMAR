@@ -382,8 +382,9 @@ circle_hough_transform <- function(pixels, rmin, rmax, threshold, resolution = 3
   on.exit(parallel::stopCluster(cluster))
   
   # Hough transform
-  A <- ff::ff(0, dim = c(d[1], d[2], length(radii))) # array(0, c(d[1], d[2], length(radii)))
-  tmp <- foreach::foreach(k = 1:length(radii), .combine = 'c', .packages = c('ff')) %dopar% {
+  k <- NULL # Avoid false positive warning from R CMD check
+  tmp <- foreach::foreach(k = 1:length(radii), .combine = 'rbind') %dopar% {
+    candidates <- data.frame(a = numeric(), b = numeric(), r = numeric())
     r <- radii[k]
     for(i in 1:nrow(pixels)) {
       x <- pixels$x[i]
@@ -391,56 +392,57 @@ circle_hough_transform <- function(pixels, rmin, rmax, threshold, resolution = 3
       for(theta in seq(from = 0, to = 2*pi, length = resolution)) {
         a <- round(x + r * cos(theta))
         b <- round(y + r * sin(theta))
-        if(a > 0 && a <= d[1] && b > 0 && b <= d[2]) {
-          A[a, b, k] <- A[a, b, k] + 1
+        if(a > 0 && a <= (d[1]+r) && b > 0 && b <= (d[2]+r)) {
+          candidates <- rbind(candidates, c(a = a, b = b, r = r))
         }
       }
     }
-    NULL
+    colnames(candidates) <- c("a", "b", "r")
+    return(candidates)
   }
+  candidates <- as.data.frame(tmp)
+  # Find and count duplicates. The counts represent the votes.
+  candidates <- stats::aggregate(cbind(candidates[0], votes = 1), candidates, length)
   
   ## Find local maxima in accumulator
   ## Iteratively search for the global maximum and
   ## remove the corresponding circle
   ## Repeat until we hit the threshold
   done <- FALSE
+  coords <- NULL
   while(!done) {
-    value.max <- max(A[])
+    # value.max <- max(A[])
+    value.max <- max(candidates$votes)
     score <- value.max/resolution
     if (score <= threshold) {
       done <- TRUE
     } else {
-      coords <- which(A[] == value.max, arr.ind = TRUE)
+      idx <- which(candidates$votes == value.max)
       ## Note: There can be more than one point with max value
       ## Remove the corresponding circles from the accumulator
-      for (k in 1:nrow(coords)) {
-        r.idx <- coords[k, 3]
-        r <- radii[r.idx]
-        coords[k, 3] <- r
-        x <- coords[k, 1]
-        y <- coords[k, 2]
-        x0 <- max(c(1, x-r))
-        y0 <- max(c(1, y-r))
-        x1 <- min(c(d[1], x+r))
-        y1 <- min(c(d[2], y+r))
-        A[x0:x1, y0:y1,] <- 0
+      if(length(idx) > 0) {
+        coords <- rbind(coords, candidates[idx,-4])
+        candidates <- candidates[-idx,]
       }
-      if(nrow(coords)>1) {
-        ## Check if the centres are close to each other
-        ## and merge those that are too close
-        dst <- as.matrix(stats::dist(coords[,-3]))
-        diag(dst) <- NA
-        rws <- unique(as.vector(which(dst<min.separation, arr.ind = TRUE)))
-        if(length(rws)>1) {
-          new.centre <- round(apply(coords[rws,], 2, mean))
-          coords <- coords[-rws,]
-          coords <- rbind(coords, new.centre)
-        }
-      }
-      circles <- cbind(coords, score)
-      circles.found <- rbind(circles.found, circles)
     }
   }
+
+  if(nrow(coords)>1) {
+    ## Check if the centres are close to each other
+    ## and merge those that are too close
+    dst <- as.matrix(stats::dist(coords[,-c(3,4)]))
+    diag(dst) <- NA
+    rws <- unique(as.vector(which(dst<min.separation, arr.ind = TRUE)))
+    if(length(rws)>1) {
+      new.centre <- round(apply(coords[rws,], 2, mean))
+      coords <- coords[-rws,]
+      coords <- rbind(coords, new.centre)
+    }
+  }
+  colnames(coords) <- c("a", "b", "r")
+  circles <- cbind(coords, score)
+  circles.found <- rbind(circles.found, circles)
+  
   if (length(circles.found)>0) {
     colnames(circles.found) <- c("x", "y", "r", "score")
   }
@@ -689,8 +691,8 @@ locs2ps <- function(points, eps, minPts, keep.locprec = TRUE, keep.channel = TRU
 #' @export
 
 idx2rowcol <- function(idx,n) {
-  nr <- ceiling(n-(1+sqrt(1+4*(n^2-n-2*idx)))/2)
-  nc <- n-(2*n-nr+1)*nr/2+idx+nr
+  nc <- ceiling(n-(1+sqrt(1+4*(n^2-n-2*idx)))/2)
+  nr <- n-(2*n-nc+1)*nc/2+idx+nc
   return(cbind(nr,nc))
 }
 
