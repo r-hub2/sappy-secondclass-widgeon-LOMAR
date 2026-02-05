@@ -31,7 +31,7 @@ class Rips
 
         class               Evaluator;
         class               Comparison;
-        class               ComparePair;       
+        struct              ComparePair;       
 
     public:
                             Rips(const Distances& distances):

@@ -1,7 +1,7 @@
 Package: LOMAR
 Type: Package
 Title: Localization Microscopy Data Analysis
-Version: 0.5.1
+Version: 0.5.2
 Authors@R: c(person("Jean-Karim", "Heriche", email = "heriche@embl.de", role = c("cre","aut"), comment = c(ORCID = "0000-0001-6867-9425")))
 Maintainer: Jean-Karim Heriche <heriche@embl.de>
 Description: Read, register and compare point sets from single molecule localization microscopy.
@@ -19,6 +19,6 @@ ByteCompile: true
 RoxygenNote: 7.3.3
 SystemRequirements: gmp, fftw3
 NeedsCompilation: yes
-Packaged: 2025-12-22 14:59:26 UTC; heriche
+Packaged: 2026-02-05 10:34:22 UTC; heriche
 Author: Jean-Karim Heriche [cre, aut] (ORCID:
     <https://orcid.org/0000-0001-6867-9425>)

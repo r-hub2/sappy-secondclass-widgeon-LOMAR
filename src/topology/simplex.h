@@ -44,7 +44,7 @@ class Simplex
         typedef     V                                                               Vertex;
         typedef     T                                                               Data;
         typedef     Simplex<Vertex, Data>                                           Self;
-        class BoundaryIterator;
+        struct BoundaryIterator;
 
         /* Typedefs: Internal representation
          *

@@ -57,7 +57,7 @@ transpose(iterator i, const DimensionFunctor& dimension, Visitor visitor)
 #ifdef COUNTERS
     Count(cTransposition);
 #endif // COUNTERS
-    typedef                 typename Element::Trail::iterator           TrailIterator;
+    //    typedef                 typename Element::Trail::iterator           TrailIterator;
 
     visitor.transpose(i);
     
@@ -140,7 +140,7 @@ transpose(iterator i, const DimensionFunctor& dimension, Visitor visitor)
         } else
         {
             // Case 1.1
-            if (std::not2(order_comparison())(index(k),index(l)))
+            if (std::not_fn(order_comparison())(index(k),index(l)))
             {
                 // Case 1.1.1
                 swap(i_prev, i);
@@ -186,7 +186,7 @@ transpose(iterator i, const DimensionFunctor& dimension, Visitor visitor)
             trail_add(i_prev, i->trail);                   // Add row i to i_prev
             cycle_add(i, i_prev->cycle);                   // Add column i_prev to i
             swap(i_prev, i);    
-            if (std::not2(order_comparison())(index(low_ii), index(low_i)))
+            if (std::not_fn(order_comparison())(index(low_ii), index(low_i)))
             {
                 // Case 2.1.2
                 cycle_add(i_prev, i->cycle);               // Add column i to i_prev (after transposition)

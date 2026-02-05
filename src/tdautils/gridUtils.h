@@ -180,7 +180,8 @@ void addOddTets(
      vertices[1] = -1; vertices[2] = -1; 
     
      int v1, v2, v3, v4;
-     double value, value2;  // max of value and value 2 is the fcn value. 
+     // max of value and value 2 is the fcn value. 
+     // double value, value2;  
 
      // top vertex (i, j, k)
      v1 = curidx -1;   vertices[0] = v1;

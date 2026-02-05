@@ -18,7 +18,7 @@ inline RealVector kde(
     const bool          printProgress,
     const Print       & print
 ) {
-  const double pi = 3.141592653589793;
+  //  const double pi = 3.141592653589793;
   const double h_to_dim = pow(h, (int)dim);
 //  const double den = pow(h, (int)dim) * pow(2 * pi, dim / 2.0);
   RealVector kdeValue;
